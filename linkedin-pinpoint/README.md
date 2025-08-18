@@ -2,6 +2,13 @@
 
 **Try the bot:** [https://t.me/Paralexa_bot](https://t.me/Paralexa_bot)
 
+<!-- Images in 3-column layout -->
+<p align="center">
+  <img src="./img/image1.png" alt="Screenshot 1" width="250"/>
+  <img src="./img/image2.png" alt="Screenshot 2" width="250"/>
+  <img src="./img/image3.png" alt="Screenshot 3" width="250"/>
+</p>
+
 Pinpoint is an interactive Telegram bot workflow built with n8n that helps users solve word association puzzles. Users submit clues via Telegram, and the bot uses AI to guess the common category and explain the connections.
 
 ## Features
