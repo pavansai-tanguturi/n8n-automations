@@ -1,5 +1,7 @@
 # Pinpoint
 
+**Try the bot:** [https://t.me/Paralexa_bot](https://t.me/Paralexa_bot)
+
 Pinpoint is an interactive Telegram bot workflow built with n8n that helps users solve word association puzzles. Users submit clues via Telegram, and the bot uses AI to guess the common category and explain the connections.
 
 ## Features
@@ -30,7 +32,3 @@ Pinpoint is an interactive Telegram bot workflow built with n8n that helps users
 - **Build Prompt**: Prepares the AI prompt.
 - **HTTP Request**: Sends clues to OpenRouter AI for analysis.
 - **Telegram Node**: Sends responses back to the user.
-
-## License
-
-MIT
