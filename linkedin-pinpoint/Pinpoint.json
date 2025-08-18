@@ -1,0 +1,380 @@
+{
+  "name": "Pinpoint",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4625d774-a413-4fb3-83d4-bd8a303fa9a0",
+              "name": "clue1",
+              "value": "orange",
+              "type": "string"
+            },
+            {
+              "id": "6b71f33a-a8c8-4c53-bfee-adca7576a8f8",
+              "name": "clue2",
+              "value": "toothpaste tube",
+              "type": "string"
+            },
+            {
+              "id": "0c1c6284-1b0a-4343-b64a-58188e112c81",
+              "name": "clue3",
+              "value": "plastic ketchup bottle",
+              "type": "string"
+            },
+            {
+              "id": "8f523271-2be9-4085-a629-a66afe816848",
+              "name": "clue4",
+              "value": "grip strength tester",
+              "type": "string"
+            },
+            {
+              "id": "72af85c8-2896-4e66-9dfa-6b681a2f6ae5",
+              "name": "clue5",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -520,
+        40
+      ],
+      "id": "67ac2471-37a7-4d48-8912-49a3cc8dbb66",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "const clues = $input.first().json.clues;\nconst chatId = $input.first().json.chatId;\n\nconst prompt = `You are solving a word association puzzle.\n\nClues: ${clues.join(\", \")}\n\nTask:\n1. Guess the common category they all belong to.\n2. Then explain how each clue is connected to the category, using one line per clue.\n\nFormat:\nCategory: <your guess>\nExplanation:\n- <clue1>: ...\n- <clue2>: ...\n...`;\n\nreturn [{ json: { prompt, chatId } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -300,
+        -10
+      ],
+      "id": "600e5daf-ab22-42f9-a818-efb17f901351",
+      "name": "Build prompt"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d91518ee-3263-4298-85fd-2543d4319321",
+              "name": "Ai_guess",
+              "value": "={{ $json.choices[0].message.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        140,
+        -110
+      ],
+      "id": "d1c463b3-cdf5-41a5-92ea-95a7541fcf0e",
+      "name": "result"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -960,
+        -210
+      ],
+      "id": "7abf186a-8816-4665-9d90-b587786043c6",
+      "name": "Telegram Trigger",
+      "webhookId": "ba24b427-3798-4757-80f6-d7104a5258dc",
+      "notesInFlow": false,
+      "credentials": {
+        "telegramApi": {
+          "id": "86WNto3ryBPqbNbn",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const chatId = $input.first().json.message.chat.id;\nconst text = $input.first().json.message.text;\nconst clueText = text.replace(\"/pinpoint\", \"\").trim();\nconst staticData = $getWorkflowStaticData('global');\n\nif (!staticData.pinpoint) staticData.pinpoint = {};\nlet userData = staticData.pinpoint[chatId] || { clues: [] };\n\n// Handle reset command\nif (text === \"/reset\" || userData.clues.length >= 5) {\n  userData.clues = [];\n  // Store the reset state and return early\n  staticData.pinpoint[chatId] = userData;\n  return [{\n    json: {\n      clues: userData.clues,\n      joinedClues: userData.clues.join(\", \"),\n      chatId\n    }\n  }];\n}\n\n// Handle /pinpoint command\nif (text.startsWith(\"/pinpoint\")) {\n  if (clueText) {\n    userData.clues = [clueText];\n  } else {\n    userData.clues = [];\n  }\n} else if (userData.clues.length < 5 && !text.startsWith(\"/\")) {\n  // Only add regular text as clues (not any commands starting with /)\n  userData.clues.push(text.trim());\n}\n\n// Store clues\nstaticData.pinpoint[chatId] = userData;\n\nreturn [{\n  json: {\n    clues: userData.clues,\n    joinedClues: userData.clues.join(\", \"),\n    chatId\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -740,
+        -210
+      ],
+      "id": "315baa45-1b12-4404-9d7f-67fbe0b5b8a7",
+      "name": "Code",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Build prompt').item.json.chatId }}",
+        "text": "={{ $json.choices[0].message.content }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        140,
+        90
+      ],
+      "id": "c2e08416-2580-4ce6-8690-1e6c52d87d33",
+      "name": "Telegram",
+      "webhookId": "c10b740e-f6e8-4bcf-96b9-71764b2d1ac6",
+      "credentials": {
+        "telegramApi": {
+          "id": "86WNto3ryBPqbNbn",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -740,
+        40
+      ],
+      "id": "b07f2291-8053-4468-bd89-9df59e567b7c",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openRouterApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "temperature",
+              "value": "0.7"
+            },
+            {
+              "name": "max_tokens",
+              "value": "300"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "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"
+            },
+            {
+              "name": "HTTP-Referer",
+              "value": "https://pavansai26.app.n8n.cloud/workflow/TPslrLuzHGGoz87k/10c712"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"google/gemini-2.0-flash-001\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.prompt.replace(/\"/g, '\\\\\"').replace(/\\n/g, '\\\\n') }}\"\n    }\n  ],\n  \"max_tokens\": 150,\n  \"temperature\": 0.7\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -80,
+        -10
+      ],
+      "id": "10c712e2-3569-47e9-969c-2a7274cf7587",
+      "name": "HTTP Request",
+      "credentials": {
+        "openRouterApi": {
+          "id": "FZS8KOm2oOVh0wu7",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fcdbdd51-7914-4ef3-86ee-c479241ebf89",
+              "leftValue": "={{ $json.joinedClues }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -520,
+        -210
+      ],
+      "id": "895fd001-d357-436f-9ab9-df9ec09da15d",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Alright, let’s crack a new mystery! What’s your first clue?",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -300,
+        -260
+      ],
+      "id": "d16e9045-a65b-4b78-a830-0b919b3335b9",
+      "name": "reset msg",
+      "webhookId": "c10b740e-f6e8-4bcf-96b9-71764b2d1ac6",
+      "credentials": {
+        "telegramApi": {
+          "id": "86WNto3ryBPqbNbn",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Build prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build prompt": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram": {
+      "main": [
+        []
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "reset msg",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "739422eb-ede1-4302-be4d-5d240d519ed0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4457daad2cf1393f2979bc256f6c61a233a4d7fd97b4256fd9284f52d5ace184"
+  },
+  "id": "TPslrLuzHGGoz87k",
+  "tags": []
+}
