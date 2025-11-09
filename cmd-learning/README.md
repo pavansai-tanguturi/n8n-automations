@@ -1,6 +1,14 @@
 
 # Daily Linux Command Tutor — n8n Workflow
 
+**Try the bot:** [https://t.me/Cmd_mac_bot](https://t.me/Cmd_mac_bot)
+
+<p align="center">
+  <img src="./img/image1.png" alt="Screenshot 1" width="250"/>
+  <img src="./img/image2.png" alt="Screenshot 2" width="250"/>
+  <img src="./img/image3.png" alt="Screenshot 3" width="250"/>
+</p>
+
 This repository contains an n8n automation that delivers one beginner-friendly Linux/macOS terminal command per day, quizzes the user, evaluates the answer using an AI evaluator, and tracks progress in Google Sheets.
 
 The workflow file included: `Daily Linux Command Tutor with AI and Quiz Evaluation.json` (importable into n8n).
