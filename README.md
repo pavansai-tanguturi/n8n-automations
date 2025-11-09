@@ -81,7 +81,7 @@ MIT - do whatever. make money, break things, idgaf.
 
 ```
     ╔══════════════════════════════════╗
-    ║    made with ☕ and laziness     ║
+    ║    made with ☕ and laziness      ║
     ║                                  ║
     ║      robots > manual work        ║
     ╚══════════════════════════════════╝
