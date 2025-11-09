@@ -1,0 +1,1075 @@
+{
+  "name": "Daily Linux Command Tutor with AI and Quiz Evaluation",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "dd937022-7880-42f4-92f9-1e6336424b24",
+      "name": "Daily at 9 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        1920,
+        2064
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "googleSheetId",
+              "value": "<__PLACEHOLDER_VALUE__Your Google Sheet ID__>",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "sheetName",
+              "value": "Lessons",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "telegramChatId",
+              "value": "<__PLACEHOLDER_VALUE__Your Telegram Chat ID__>",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "50a8c80b-3187-49d2-a254-449fa7a64cfd",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2144,
+        2064
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1K7p6NuF3FgLycgJmhDEhTrFHQ8qCiZNRuwultrFCI4U",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "CMD",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1K7p6NuF3FgLycgJmhDEhTrFHQ8qCiZNRuwultrFCI4U/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "status",
+              "lookupValue": "={{ \"pending\" }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "902dd2f0-eb2e-43ec-b5c5-c82b355d2923",
+      "name": "Read Next Pending Lesson",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2368,
+        2064
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "h8kndGzGe63szRdV",
+          "name": "cmd"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $('Read Next Pending Lesson').item.json.command }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a0ba2761-fdd7-47ed-8dd3-0a7612d5cf6c",
+      "name": "Is Lesson Available?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2592,
+        2064
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Teach me a UNIQUE beginner-friendly Linux command that is not common (avoid ls, cd, pwd, mkdir, rm, cp, mv, cat, grep, find, chmod, chown, etc.). \nPick an interesting but still useful command for newbies.\n\nKeep explanations short, friendly, and beginner-friendly.",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "id": "5991843f-7f56-45bd-8861-b38928bf7cec",
+      "name": "Generate New Lesson",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        2816,
+        1824
+      ]
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"command\": \"tldr\",\n  \"description\": \"Shows simplified help pages for commands.\",\n  \"usage\": \"Run 'tldr tar' to see a short, beginner-friendly example of how to use tar.\",\n  \"task\": \"Install tldr and try 'tldr grep' to view simplified usage examples.\",\n  \"quiz_question\": \"What does the tldr command do?\",\n  \"correct_answer\": \"Shows simplified help pages for commands.\"\n}"
+      },
+      "id": "50ffa069-7512-4f9b-9704-0c38f75e0eaa",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2960,
+        2048
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "=1K7p6NuF3FgLycgJmhDEhTrFHQ8qCiZNRuwultrFCI4U",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "CMD",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1K7p6NuF3FgLycgJmhDEhTrFHQ8qCiZNRuwultrFCI4U/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "command": "={{ $json.output.command }}",
+            "description": "={{ $json.output.description }}",
+            "task": "={{ $json.output.task }}",
+            "quiz_question": "={{ $json.output.quiz_question }}",
+            "correct_answer": "={{ $json.output.correct_answer }}",
+            "status": "={{'pending'}}",
+            "date_generated": "={{ $now.toFormat(\"yyyy-LL-dd\") }}"
+          },
+          "matchingColumns": [
+            "command"
+          ],
+          "schema": [
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "command",
+              "displayName": "command",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "task",
+              "displayName": "task",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "quiz_question",
+              "displayName": "quiz_question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "correct_answer",
+              "displayName": "correct_answer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "date_generated",
+              "displayName": "date_generated",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "e9adf9e3-63e4-43cb-8886-864d0f753931",
+      "name": "Append New Lesson",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3168,
+        1936
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "h8kndGzGe63szRdV",
+          "name": "cmd"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "03b57470-dc0f-46e0-aea8-c96cb8573373",
+      "name": "Merge Lesson Paths",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3392,
+        2064
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "6531798741",
+        "text": "=🐧 *Daily Linux Lesson*\n\n📝 Command: `{{ $json.command }}`\n\n📖 Description: {{ $json.description }}\n\n✅ Task: {{ $json.task }}\n\n❓ Quiz: {{ $json.quiz_question }}\n",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "ec7e4836-e0d0-4f3b-a470-00b10d7acc67",
+      "name": "Send Lesson to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3616,
+        2064
+      ],
+      "webhookId": "12fda9ba-4943-46bb-b407-92130ee128d1",
+      "credentials": {
+        "telegramApi": {
+          "id": "crnbGvcABatojUj7",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "d1771aea-6978-4d91-b703-ba18c6cb7dbe",
+      "name": "Telegram Answer Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        1920,
+        2384
+      ],
+      "webhookId": "a7ace3ff-5091-4e14-b01d-8cf8f3bf9d20",
+      "credentials": {
+        "telegramApi": {
+          "id": "crnbGvcABatojUj7",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "googleSheetId",
+              "value": "<__PLACEHOLDER_VALUE__Your Google Sheet ID__>",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "sheetName",
+              "value": "Lessons",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "userAnswer",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "c256646e-4963-4c56-ac21-bf974f70d24a",
+      "name": "Workflow Configuration 2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2144,
+        2384
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "=1K7p6NuF3FgLycgJmhDEhTrFHQ8qCiZNRuwultrFCI4U",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "CMD",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1K7p6NuF3FgLycgJmhDEhTrFHQ8qCiZNRuwultrFCI4U/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "status",
+              "lookupValue": "pending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "593bf2b5-bd84-4788-b71f-d707684e69fb",
+      "name": "Read Current Pending Lesson",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2368,
+        2384
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "h8kndGzGe63szRdV",
+          "name": "cmd"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "=1K7p6NuF3FgLycgJmhDEhTrFHQ8qCiZNRuwultrFCI4U",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "CMD",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1K7p6NuF3FgLycgJmhDEhTrFHQ8qCiZNRuwultrFCI4U/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $('Read Current Pending Lesson').item.json.row_number }}",
+            "status": "={{'completed'}}",
+            "command": "={{ $('Read Current Pending Lesson').item.json.row_number }}"
+          },
+          "matchingColumns": [
+            "command"
+          ],
+          "schema": [
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "command",
+              "displayName": "command",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "task",
+              "displayName": "task",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "quiz_question",
+              "displayName": "quiz_question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "correct_answer",
+              "displayName": "correct_answer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "date_generated",
+              "displayName": "date_generated",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "0b6b2f7a-0fcf-4073-8b82-116525073b6a",
+      "name": "Mark as Completed",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3168,
+        2288
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "h8kndGzGe63szRdV",
+          "name": "cmd"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "=1K7p6NuF3FgLycgJmhDEhTrFHQ8qCiZNRuwultrFCI4U",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "CMD",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1K7p6NuF3FgLycgJmhDEhTrFHQ8qCiZNRuwultrFCI4U/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "={{'retry'}}",
+            "row_number": "={{ $('Read Current Pending Lesson').item.json.row_number }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "command",
+              "displayName": "command",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "task",
+              "displayName": "task",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "quiz_question",
+              "displayName": "quiz_question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "correct_answer",
+              "displayName": "correct_answer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "date_generated",
+              "displayName": "date_generated",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "0de787f8-e82d-45b0-a1b5-89a141441881",
+      "name": "Mark as Retry",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3168,
+        2480
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "h8kndGzGe63szRdV",
+          "name": "cmd"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "=6531798741",
+        "text": "=✅ *Correct!*\n\n{{ $('AI Answer Evaluator').first().json.output.feedback }}\n\n{{ $('AI Answer Evaluator').first().json.output.explanation }}\n\nKeep up the good work! 🎉",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "947ce378-41a1-4419-9f79-21a7664c48a4",
+      "name": "Send Correct Feedback",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3392,
+        2288
+      ],
+      "webhookId": "ee455ef8-907d-4672-8b22-2e9ee7447c4d",
+      "credentials": {
+        "telegramApi": {
+          "id": "crnbGvcABatojUj7",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "=6531798741",
+        "text": "=❌ *Not quite right*\n\n{{ $('AI Answer Evaluator').first().json.output.feedback }}\n\n{{ $('AI Answer Evaluator').first().json.output.explanation }}\n\nCorrect answer: `{{ $('Read Current Pending Lesson').first().json.correct_answer }}`\n\nDon't worry, you'll get it next time! 💪",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "781119e0-cc59-4593-aa55-d3bf2fc4c515",
+      "name": "Send Wrong Feedback",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3392,
+        2480
+      ],
+      "webhookId": "94f70b27-b5e2-44cf-bd4e-ee61463b5d1c",
+      "credentials": {
+        "telegramApi": {
+          "id": "crnbGvcABatojUj7",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "google/gemma-3n-e4b-it:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        2832,
+        2048
+      ],
+      "id": "cc89177a-d8af-4585-ae20-f0b334273bc4",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "rY8pVcTugiaffZQj",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an intelligent Linux tutor evaluating student answers.\n\nQuestion: {{ $json.quiz_question }}\nCorrect Answer: {{ $json.correct_answer }}\nStudent Answer: {{ $('Workflow Configuration 2').first().json.userAnswer }}\n\nEvaluate if the student's answer is semantically correct, even if worded differently. Consider:\n- Exact matches\n- Synonyms and equivalent terms\n- Partial correctness (e.g., '-a' vs 'a' vs '--all')\n- Common abbreviations\n\nReturn your evaluation.",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "id": "a58daa34-19f8-44b4-8562-d5046de360b9",
+      "name": "AI Answer Evaluator",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        2592,
+        2384
+      ]
+    },
+    {
+      "parameters": {
+        "model": "google/gemma-3n-e4b-it:free",
+        "options": {}
+      },
+      "id": "32ae3d6f-2a67-4e2e-af92-ce1795ad7e18",
+      "name": "OpenRouter Chat Model 2",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        2608,
+        2608
+      ],
+      "credentials": {
+        "openRouterApi": {
+          "id": "rY8pVcTugiaffZQj",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"is_correct\": true,\n\t\"explanation\": \"The answer is correct because...\",\n\t\"feedback\": \"Great job!\"\n}"
+      },
+      "id": "8267c8b9-5dd8-44de-8b41-380ac16800ad",
+      "name": "Structured Output Parser 2",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2736,
+        2608
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $('AI Answer Evaluator').item.json.output.is_correct.toBoolean() }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "24a3e0b1-1066-47a7-9374-0cdb3f421229",
+      "name": "Check AI Evaluation",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2944,
+        2384
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Daily at 9 AM": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "Read Next Pending Lesson",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Next Pending Lesson": {
+      "main": [
+        [
+          {
+            "node": "Is Lesson Available?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Lesson Available?": {
+      "main": [
+        [
+          {
+            "node": "Merge Lesson Paths",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate New Lesson",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Generate New Lesson",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate New Lesson": {
+      "main": [
+        [
+          {
+            "node": "Append New Lesson",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append New Lesson": {
+      "main": [
+        [
+          {
+            "node": "Merge Lesson Paths",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Lesson Paths": {
+      "main": [
+        [
+          {
+            "node": "Send Lesson to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Answer Trigger": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration 2": {
+      "main": [
+        [
+          {
+            "node": "Read Current Pending Lesson",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Current Pending Lesson": {
+      "main": [
+        [
+          {
+            "node": "AI Answer Evaluator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark as Completed": {
+      "main": [
+        [
+          {
+            "node": "Send Correct Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark as Retry": {
+      "main": [
+        [
+          {
+            "node": "Send Wrong Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate New Lesson",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model 2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Answer Evaluator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser 2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Answer Evaluator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Answer Evaluator": {
+      "main": [
+        [
+          {
+            "node": "Check AI Evaluation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check AI Evaluation": {
+      "main": [
+        [
+          {
+            "node": "Mark as Completed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark as Retry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "72eece92-6d21-4b9f-94e0-623898e56dc1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c15246315692bc449c917fd057b1040bcb9e6fffa86654d4e1e20034008462b2"
+  },
+  "id": "5DcQS07PNDz7yJQT",
+  "tags": []
+}
