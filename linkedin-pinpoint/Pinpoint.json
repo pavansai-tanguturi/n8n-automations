@@ -181,7 +181,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "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"
+              "value": "Bearer {{ $credentials.openRouterApi.apiKey }}"
             },
             {
               "name": "HTTP-Referer",
