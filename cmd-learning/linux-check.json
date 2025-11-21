@@ -1,334 +1,6 @@
 {
-  "name": "Daily Linux Command Tutor with AI and Quiz Evaluation",
+  "name": "My workflow",
   "nodes": [
-    {
-      "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "triggerAtHour": 9
-            }
-          ]
-        }
-      },
-      "id": "dd937022-7880-42f4-92f9-1e6336424b24",
-      "name": "Daily at 9 AM",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
-      "position": [
-        1920,
-        2048
-      ]
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "id-1",
-              "name": "googleSheetId",
-              "value": "<__PLACEHOLDER_VALUE__Your Google Sheet ID__>",
-              "type": "string"
-            },
-            {
-              "id": "id-2",
-              "name": "sheetName",
-              "value": "Lessons",
-              "type": "string"
-            },
-            {
-              "id": "id-3",
-              "name": "telegramChatId",
-              "value": "<__PLACEHOLDER_VALUE__Your Telegram Chat ID__>",
-              "type": "string"
-            }
-          ]
-        },
-        "includeOtherFields": true,
-        "options": {}
-      },
-      "id": "50a8c80b-3187-49d2-a254-449fa7a64cfd",
-      "name": "Workflow Configuration",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        2144,
-        2048
-      ]
-    },
-    {
-      "parameters": {
-        "documentId": {
-          "__rl": true,
-          "value": "1K7p6NuF3FgLycgJmhDEhTrFHQ8qCiZNRuwultrFCI4U",
-          "mode": "id"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "gid=0",
-          "mode": "list",
-          "cachedResultName": "CMD",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1K7p6NuF3FgLycgJmhDEhTrFHQ8qCiZNRuwultrFCI4U/edit#gid=0"
-        },
-        "filtersUI": {
-          "values": [
-            {
-              "lookupColumn": "status",
-              "lookupValue": "={{ \"pending\" }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "902dd2f0-eb2e-43ec-b5c5-c82b355d2923",
-      "name": "Read Next Pending Lesson",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        2368,
-        2048
-      ],
-      "alwaysOutputData": true,
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "h8kndGzGe63szRdV",
-          "name": "cmd"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "id-1",
-              "leftValue": "={{ $('Read Next Pending Lesson').item.json.command }}",
-              "operator": {
-                "type": "string",
-                "operation": "notEmpty"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "a0ba2761-fdd7-47ed-8dd3-0a7612d5cf6c",
-      "name": "Is Lesson Available?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        2592,
-        2048
-      ]
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "Teach me a powerful and lesser-known Linux command that professionals use. Choose something advanced, efficient, or clever — not basic or beginner-level. Explain what it does, how it works, and give a few practical examples of how an experienced Linux user would use it.",
-        "hasOutputParser": true,
-        "batching": {}
-      },
-      "id": "5991843f-7f56-45bd-8861-b38928bf7cec",
-      "name": "Generate New Lesson",
-      "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1.7,
-      "position": [
-        2816,
-        2080
-      ]
-    },
-    {
-      "parameters": {
-        "jsonSchemaExample": "{\n  \"command\": \"whoami\",\n  \"description\": \"Shows the username of the currently logged-in user.\",\n  \"usage\": \"whoami\",\n  \"task\": \"Run the command to find out which user you are logged in as.\",\n  \"quiz_question\": \"What does the whoami command display?\",\n  \"correct_answer\": \"It prints the username of the currently logged-in user.\"\n}\n"
-      },
-      "id": "50ffa069-7512-4f9b-9704-0c38f75e0eaa",
-      "name": "Structured Output Parser",
-      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
-      "typeVersion": 1.3,
-      "position": [
-        2960,
-        2304
-      ]
-    },
-    {
-      "parameters": {
-        "operation": "appendOrUpdate",
-        "documentId": {
-          "__rl": true,
-          "value": "=1K7p6NuF3FgLycgJmhDEhTrFHQ8qCiZNRuwultrFCI4U",
-          "mode": "id"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "gid=0",
-          "mode": "list",
-          "cachedResultName": "CMD",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1K7p6NuF3FgLycgJmhDEhTrFHQ8qCiZNRuwultrFCI4U/edit#gid=0"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "command": "={{ $json.output.command }}",
-            "description": "={{ $json.output.description }}",
-            "task": "={{ $json.output.task }}",
-            "quiz_question": "={{ $json.output.quiz_question }}",
-            "correct_answer": "={{ $json.output.correct_answer }}",
-            "status": "={{'pending'}}",
-            "date_generated": "={{ $now.toFormat(\"yyyy-LL-dd\") }}",
-            "usage": "={{ $json.output.usage }}"
-          },
-          "matchingColumns": [
-            "command"
-          ],
-          "schema": [
-            {
-              "id": "row_number",
-              "displayName": "row_number",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "command",
-              "displayName": "command",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "usage",
-              "displayName": "usage",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "description",
-              "displayName": "description",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "task",
-              "displayName": "task",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "quiz_question",
-              "displayName": "quiz_question",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "correct_answer",
-              "displayName": "correct_answer",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "status",
-              "displayName": "status",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "date_generated",
-              "displayName": "date_generated",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
-      },
-      "id": "e9adf9e3-63e4-43cb-8886-864d0f753931",
-      "name": "Append New Lesson",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        3168,
-        2176
-      ],
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "h8kndGzGe63szRdV",
-          "name": "cmd"
-        }
-      }
-    },
-    {
-      "parameters": {},
-      "id": "03b57470-dc0f-46e0-aea8-c96cb8573373",
-      "name": "Merge Lesson Paths",
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        3392,
-        2048
-      ]
-    },
-    {
-      "parameters": {
-        "chatId": "6531798741",
-        "text": "=📝 Command: {{ $json.command }}\n\n📖 Description: {{ $json.description }}\n\n💻 Usage: {{ $json.usage }}\n\n✅ Task: {{ $json.task }}\n\n❓ Quiz: {{ $json.quiz_question }}",
-        "additionalFields": {
-          "appendAttribution": false
-        }
-      },
-      "id": "ec7e4836-e0d0-4f3b-a470-00b10d7acc67",
-      "name": "Send Lesson to Telegram",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        3616,
-        2048
-      ],
-      "webhookId": "12fda9ba-4943-46bb-b407-92130ee128d1",
-      "credentials": {
-        "telegramApi": {
-          "id": "crnbGvcABatojUj7",
-          "name": "Telegram account"
-        }
-      }
-    },
     {
       "parameters": {
         "updates": [
@@ -336,13 +8,13 @@
         ],
         "additionalFields": {}
       },
-      "id": "d1771aea-6978-4d91-b703-ba18c6cb7dbe",
+      "id": "3cbef0de-9237-46c3-a5e5-9efed57232ce",
       "name": "Telegram Answer Trigger",
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.2,
       "position": [
-        1920,
-        2608
+        -1008,
+        32
       ],
       "webhookId": "a7ace3ff-5091-4e14-b01d-8cf8f3bf9d20",
       "credentials": {
@@ -379,13 +51,13 @@
         "includeOtherFields": true,
         "options": {}
       },
-      "id": "c256646e-4963-4c56-ac21-bf974f70d24a",
+      "id": "ac1c856e-4580-4d4c-827f-9a2006fe7f48",
       "name": "Workflow Configuration 2",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2144,
-        2608
+        -784,
+        32
       ]
     },
     {
@@ -412,13 +84,13 @@
         },
         "options": {}
       },
-      "id": "593bf2b5-bd84-4788-b71f-d707684e69fb",
+      "id": "f71da28e-1f7c-4119-97da-69a1989185ca",
       "name": "Read Current Pending Lesson",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        2368,
-        2608
+        -560,
+        32
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -560,13 +232,13 @@
         },
         "options": {}
       },
-      "id": "0b6b2f7a-0fcf-4073-8b82-116525073b6a",
+      "id": "651ea9fa-0dee-49e3-a5e4-9f7628b536d7",
       "name": "Mark as Completed",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        3168,
-        2512
+        240,
+        -64
       ],
       "alwaysOutputData": true,
       "credentials": {
@@ -709,13 +381,13 @@
         },
         "options": {}
       },
-      "id": "0de787f8-e82d-45b0-a1b5-89a141441881",
+      "id": "31042559-a890-4f26-82b3-e4a6d4757a0f",
       "name": "Mark as Retry",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        3168,
-        2704
+        240,
+        128
       ],
       "alwaysOutputData": true,
       "credentials": {
@@ -734,13 +406,13 @@
           "parse_mode": "Markdown"
         }
       },
-      "id": "947ce378-41a1-4419-9f79-21a7664c48a4",
+      "id": "f71362f3-2189-47f9-a7f2-35fcf9814cad",
       "name": "Send Correct Feedback",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        3392,
-        2512
+        464,
+        -64
       ],
       "webhookId": "ee455ef8-907d-4672-8b22-2e9ee7447c4d",
       "credentials": {
@@ -759,13 +431,13 @@
           "parse_mode": "Markdown"
         }
       },
-      "id": "781119e0-cc59-4593-aa55-d3bf2fc4c515",
+      "id": "d2173a36-8ed1-4af8-9296-1ee8359e6690",
       "name": "Send Wrong Feedback",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        3392,
-        2704
+        464,
+        128
       ],
       "webhookId": "94f70b27-b5e2-44cf-bd4e-ee61463b5d1c",
       "credentials": {
@@ -777,38 +449,18 @@
     },
     {
       "parameters": {
-        "model": "google/gemini-2.0-flash-exp:free",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
-      "typeVersion": 1,
-      "position": [
-        2832,
-        2304
-      ],
-      "id": "cc89177a-d8af-4585-ae20-f0b334273bc4",
-      "name": "OpenRouter Chat Model",
-      "credentials": {
-        "openRouterApi": {
-          "id": "<__PLACEHOLDER_VALUE__Your OpenRouter API ID__>",
-          "name": "OpenRouter account"
-        }
-      }
-    },
-    {
-      "parameters": {
         "promptType": "define",
         "text": "=You are an intelligent Linux tutor evaluating student answers.\n\nQuestion: {{ $json.quiz_question }}\nCorrect Answer: {{ $json.correct_answer }}\nStudent Answer: {{ $('Workflow Configuration 2').first().json.userAnswer }}\n\nEvaluate if the student's answer is semantically correct, even if worded differently. Consider:\n- Exact matches\n- Synonyms and equivalent terms\n- Partial correctness (e.g., '-a' vs 'a' vs '--all')\n- Common abbreviations\n\nReturn your evaluation.",
         "hasOutputParser": true,
         "batching": {}
       },
-      "id": "a58daa34-19f8-44b4-8562-d5046de360b9",
+      "id": "c1e3863f-4c62-4162-8330-1e14ca6392a5",
       "name": "AI Answer Evaluator",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.7,
       "position": [
-        2592,
-        2608
+        -336,
+        32
       ]
     },
     {
@@ -816,17 +468,17 @@
         "model": "google/gemini-2.0-flash-exp:free",
         "options": {}
       },
-      "id": "32ae3d6f-2a67-4e2e-af92-ce1795ad7e18",
+      "id": "d76d4a4e-1f7e-4b1c-9948-5d526bc13320",
       "name": "OpenRouter Chat Model 2",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
       "typeVersion": 1,
       "position": [
-        2608,
-        2832
+        -320,
+        256
       ],
       "credentials": {
         "openRouterApi": {
-          "id": "<__PLACEHOLDER_VALUE__Your OpenRouter API ID__>",
+          "id": "rY8pVcTugiaffZQj",
           "name": "OpenRouter account"
         }
       }
@@ -835,13 +487,13 @@
       "parameters": {
         "jsonSchemaExample": "{\n\t\"is_correct\": true,\n\t\"explanation\": \"The answer is correct because...\",\n\t\"feedback\": \"Great job!\"\n}"
       },
-      "id": "8267c8b9-5dd8-44de-8b41-380ac16800ad",
+      "id": "b2b2b990-cd82-419b-8254-f1f889df9c2a",
       "name": "Structured Output Parser 2",
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        2736,
-        2832
+        -192,
+        256
       ]
     },
     {
@@ -868,113 +520,18 @@
         },
         "options": {}
       },
-      "id": "24a3e0b1-1066-47a7-9374-0cdb3f421229",
+      "id": "96148657-fc0a-450d-ae20-e1517be32d40",
       "name": "Check AI Evaluation",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        2944,
-        2608
+        16,
+        32
       ]
     }
   ],
   "pinData": {},
   "connections": {
-    "Daily at 9 AM": {
-      "main": [
-        [
-          {
-            "node": "Workflow Configuration",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Workflow Configuration": {
-      "main": [
-        [
-          {
-            "node": "Read Next Pending Lesson",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Read Next Pending Lesson": {
-      "main": [
-        [
-          {
-            "node": "Is Lesson Available?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Is Lesson Available?": {
-      "main": [
-        [
-          {
-            "node": "Merge Lesson Paths",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Generate New Lesson",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Structured Output Parser": {
-      "ai_outputParser": [
-        [
-          {
-            "node": "Generate New Lesson",
-            "type": "ai_outputParser",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Generate New Lesson": {
-      "main": [
-        [
-          {
-            "node": "Append New Lesson",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Append New Lesson": {
-      "main": [
-        [
-          {
-            "node": "Merge Lesson Paths",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "Merge Lesson Paths": {
-      "main": [
-        [
-          {
-            "node": "Send Lesson to Telegram",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Telegram Answer Trigger": {
       "main": [
         [
@@ -1030,12 +587,12 @@
         ]
       ]
     },
-    "OpenRouter Chat Model": {
-      "ai_languageModel": [
+    "AI Answer Evaluator": {
+      "main": [
         [
           {
-            "node": "Generate New Lesson",
-            "type": "ai_languageModel",
+            "node": "Check AI Evaluation",
+            "type": "main",
             "index": 0
           }
         ]
@@ -1063,17 +620,6 @@
         ]
       ]
     },
-    "AI Answer Evaluator": {
-      "main": [
-        [
-          {
-            "node": "Check AI Evaluation",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Check AI Evaluation": {
       "main": [
         [
@@ -1093,15 +639,14 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "424b05bc-cdc6-4917-9b2d-08fc88acb9cf",
+  "versionId": "9a6bf6ce-f705-4a9c-a845-4813a2356105",
   "meta": {
-    "templateCredsSetupCompleted": true,
     "instanceId": "c15246315692bc449c917fd057b1040bcb9e6fffa86654d4e1e20034008462b2"
   },
-  "id": "5DcQS07PNDz7yJQT",
+  "id": "h5k88WhjpeTXE8Ud",
   "tags": []
 }
